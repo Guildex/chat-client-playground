@@ -3,7 +3,7 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 const API_HOST =
   process.env.NODE_ENV !== "production"
     ? "http://localhost:4000"
-    : "https://https://api.frontiers.cloud/graphql";
+    : "https://https://dev-api.frappy.app/graphql";
 
 export default {
   schema: `${API_HOST}/graphql`,
