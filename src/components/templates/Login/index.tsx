@@ -13,7 +13,7 @@ export const LoginTemplate = () => {
         }}
         onClick={async () => {
           const { data } = await axios.get(
-            `https://${process.env.NEXT_PUBLIC_API_HOST}/auth/line`
+            `${process.env.NEXT_PUBLIC_API_HOST}/auth/line`
           );
 
           console.log(data);
