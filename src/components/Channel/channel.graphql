@@ -1,0 +1,21 @@
+query GetChannel($uuid: String!) {
+  channel(uuid: $uuid) {
+    id
+    uuid
+    messages {
+      id
+      senderId
+      createdAt
+      sender {
+        profile {
+          nickname
+        }
+      }
+      content {
+        body
+      }
+    }
+  }
+}
+
+mutation Post

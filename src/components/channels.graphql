@@ -1,6 +1,0 @@
-query GetChannel($uuid: String!) {
-  channels {
-    id
-    name
-  }
-}

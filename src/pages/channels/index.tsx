@@ -1,9 +1,7 @@
+import { Channels } from "~/components/templates/Channels";
+
 const Messages = () => {
-  return (
-    <div>
-      <p>aa</p>
-    </div>
-  );
+  return <Channels />;
 };
 
 export default Messages;

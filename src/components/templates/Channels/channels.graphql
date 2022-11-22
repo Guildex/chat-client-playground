@@ -1,0 +1,16 @@
+query GetChannels {
+  channels {
+    id
+    uuid
+    name
+    users {
+      user {
+        profile {
+          avatarUrls {
+            url
+          }
+        }
+      }
+    }
+  }
+}
