@@ -35,5 +35,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-@generated
-!@generated/.gitkeep
+src/@generated/*.ts
+src/@generated/*.graphql
