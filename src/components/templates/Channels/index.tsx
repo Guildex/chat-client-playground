@@ -26,36 +26,39 @@ export const Channels = () => {
     <div style={{ position: "relative", height: "100vh" }}>
       <MainContainer responsive>
         <Sidebar position="left">
-          <Container css={{ p: "8px 12px" }}>
+          <Container
+            css={{ display: "flex", alignItems: "center", p: "8px 12px" }}
+          >
             <Input
               aria-label="channelName"
-              width="100%"
+              width="80%"
               placeholder="渋谷で飲もう！"
               disabled={loading}
               onInput={(e) => {
                 setChannelName(e.currentTarget.value);
               }}
-              contentRight={
-                loading ? (
-                  <Loading />
-                ) : (
-                  <Styled.SendButton
-                    disabled={loading}
-                    onClick={async () => {
-                      console.log("aa");
-                      await createChannel({
-                        variables: {
-                          name: channelName,
-                        },
-                      });
-                      refetch();
-                    }}
-                  >
-                    <TiPlus color="#fff" size="20px" />
-                  </Styled.SendButton>
-                )
-              }
             />
+            <Styled.SendButtonBox>
+              <Styled.SendButton
+                disabled={loading}
+                onClick={async () => {
+                  if (!channelName) return;
+
+                  await createChannel({
+                    variables: {
+                      name: channelName,
+                    },
+                  });
+                  refetch();
+                }}
+              >
+                {loading ? (
+                  <Loading size="xs" />
+                ) : (
+                  <TiPlus color="#fff" size="20px" />
+                )}
+              </Styled.SendButton>
+            </Styled.SendButtonBox>
           </Container>
 
           {data?.channels.map(({ uuid, name }) => (

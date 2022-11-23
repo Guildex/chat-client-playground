@@ -1,9 +1,16 @@
 import { Button, Container } from "@nextui-org/react";
 import { useRouter } from "next/router";
-import axios from "axios";
+import { useEffect } from "react";
 
 export const LoginTemplate = () => {
   const router = useRouter();
+
+  useEffect(() => {
+    if (!router.query.token) return;
+
+    localStorage.setItem("access_token", router.query.token as string);
+    router.replace("/channels");
+  }, [router.query.token]);
 
   return (
     <Container display="flex" justify="center">
@@ -12,11 +19,9 @@ export const LoginTemplate = () => {
           backgroundColor: "#07b53b",
         }}
         onClick={async () => {
-          const { data } = await axios.get(
+          location.assign(
             `https://${process.env.NEXT_PUBLIC_API_HOST}/auth/line`
           );
-
-          console.log(data);
         }}
       >
         ログイン
