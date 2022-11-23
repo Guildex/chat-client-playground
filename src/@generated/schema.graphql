@@ -1,0 +1,399 @@
+"""Exposes a URL that specifies the behaviour of this scalar."""
+directive @specifiedBy(
+  """The URL that specifies the behaviour of this scalar."""
+  url: String!
+) on SCALAR
+
+"""年収"""
+enum AnnualIncome {
+  UNDER_THREE_MILLION
+  BETWEEN_THREE_MILLION_AND_FOUR_MILLION
+  BETWEEN_FOUR_MILLION_AND_SIX_MILLION
+  BETWEEN_SIX_MILLION_AND_EIGHT_MILLION
+  BETWEEN_EIGHT_MILLION_AND_TEN_MILLION
+  BETWEEN_TEN_MILLION_AND_FIFTEEN_MILLION
+  BETWEEN_FIFTEEN_MILLION_AND_TWENTY_MILLION
+  OVER_TWENTY_MILLION
+}
+
+type AuthenticateOutput {
+  accessToken: String!
+  user: User!
+}
+
+type AvatarUrl {
+  id: ID!
+
+  """Profile.id"""
+  profileId: Int!
+
+  """プロフィール画像のURL"""
+  url: String!
+  profile: Profile
+}
+
+type Channel {
+  id: ID!
+
+  """チャンネルを識別するユニークID"""
+  uuid: String!
+
+  """チャンネル名"""
+  name: String!
+  messages: [Message!]
+  users: [UserOnChannel!]
+  _count: ChannelCount!
+}
+
+type ChannelCount {
+  messages: Int!
+  users: Int!
+}
+
+input ConnectionArguments {
+  first: Int
+  after: String
+  last: Int
+  before: String
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""飲酒"""
+enum Drinking {
+  DONT_DRINK
+  SOMETIMES
+  DRINK
+}
+
+type Edge {
+  cursor: String!
+  node: ProfileDetail!
+}
+
+"""学歴"""
+enum Education {
+  HIGH_SCOOL_GRADUATE
+  JUNIOR_COLLEGE_GRADUATE
+  UNIVERSITY_GRADUATE
+  MASTERS_GRADUATE
+  OTHER
+}
+
+"""体型"""
+enum Figure {
+  SLIM
+  MUSCULAR
+  PLUMP
+  FAT
+}
+
+"""結婚状況"""
+enum MaritalStatus {
+  SINGLE
+  DIVORCE
+  BEREAVEMENT
+}
+
+type Message {
+  id: ID!
+  channelId: Int!
+  senderId: Int!
+  messageContentId: Int!
+  createdAt: DateTime!
+  channel: Channel
+  sender: User
+  content: MessageContent!
+}
+
+type MessageContent {
+  id: ID!
+
+  """メッセージ本文"""
+  body: String!
+  message: Message
+}
+
+type Mutation {
+  """チャンネルを作成"""
+  createChannel(
+    """チャンネル名"""
+    name: String!
+  ): Channel!
+  sendMessage(
+    """Channel.uuid"""
+    channelUuid: String!
+
+    """メッセージ本文"""
+    body: String!
+  ): Message!
+
+  """ユーザー登録"""
+  registerUser(input: UpdateUserInput!): AuthenticateOutput!
+
+  """ユーザ情報を更新"""
+  updateUser(input: UpdateUserInput!): User!
+}
+
+"""職業"""
+enum Occupation {
+  EXECUTIVE
+  ACCOUNTANT
+  STUDENT
+  BEAUTICIAN
+  ENGINEER
+  DESIGNER
+  DIRECTOR
+  FREELANCE
+  OTHER
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Profile {
+  id: ID!
+
+  """User.id"""
+  userId: Int!
+
+  """ニックネーム"""
+  nickname: String!
+
+  """年齢"""
+  birthday: DateTime!
+
+  """都道府県のコード"""
+  prefectureCode: Int!
+
+  """市区町村のコード"""
+  cityCode: Int
+
+  """最後にログインした時間"""
+  lastLoggedInAt: DateTime
+
+  """自己紹介"""
+  selfIntroduction: String
+  user: User!
+  avatarUrls: [AvatarUrl!]
+  detail: ProfileDetail
+  _count: ProfileCount!
+}
+
+type ProfileCount {
+  avatarUrls: Int!
+}
+
+"""検索条件で利用するプロフィールの詳細情報"""
+type ProfileDetail {
+  id: ID!
+
+  """Profile.id"""
+  profileId: Int!
+
+  """身長"""
+  height: Int
+
+  """年収"""
+  annualIncome: AnnualIncome
+
+  """職業"""
+  occupation: Occupation
+
+  """体型"""
+  figure: Figure
+
+  """飲酒"""
+  drinking: Drinking
+
+  """喫煙"""
+  smoking: Smoking
+
+  """結婚状況"""
+  maritalStatus: MaritalStatus
+
+  """学歴"""
+  education: Education
+  profile: Profile
+}
+
+type ProfileDetailsConnection {
+  nodes: [ProfileDetail!]!
+  edges: [Edge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input ProfileDetailsFilterArgs {
+  height: RangeFilter
+  annualIncome: AnnualIncome
+  occupation: Occupation
+  figure: Figure
+  drinking: Drinking
+  smoking: Smoking
+  maritalStatus: MaritalStatus
+  education: Education
+}
+
+type Query {
+  """ログイン中のユーザーを取得"""
+  viewer: User!
+  channel(
+    """Channel.uuid"""
+    uuid: String!
+  ): Channel
+
+  """ログイン中のユーザーのチャンネル一覧を取得"""
+  channels: [Channel!]!
+  searchProfiles(
+    """Paginationに必要なパラメーター"""
+    connectionArgs: ConnectionArguments!
+
+    """検索条件となる値"""
+    filterArgs: ProfileDetailsFilterArgs
+  ): ProfileDetailsConnection!
+
+  """ユーザー情報を取得"""
+  user(id: Int): UserOutput
+}
+
+input RangeFilter {
+  min: Int
+  max: Int
+}
+
+"""喫煙"""
+enum Smoking {
+  NO_SMORKING
+  SMORKING
+  E_CIGARETTE
+  SOMETIMES
+  DO_NOT
+  STOP
+}
+
+type Subscription {
+  messageSent: Message!
+}
+
+"""ユーザー情報更新時に渡す値"""
+input UpdateUserInput {
+  """メールアドレス"""
+  email: String
+
+  """ユーザーの状態"""
+  status: String
+
+  """ニックネーム"""
+  nickname: String
+
+  """都道府県コード"""
+  prefectureCode: Int
+
+  """市区町村コード"""
+  cityCode: Int
+
+  """身長"""
+  height: Int
+
+  """年収"""
+  annualIncome: String
+
+  """職業"""
+  occupation: String
+
+  """体型"""
+  figure: String
+
+  """飲酒"""
+  drinking: String
+
+  """喫煙"""
+  smoking: String
+
+  """結婚状況"""
+  maritalStatus: String
+
+  """学歴"""
+  education: String
+}
+
+type User {
+  id: ID!
+
+  """LINE ID"""
+  lineId: String
+
+  """Facebook ID"""
+  fbId: String
+
+  """メールアドレス"""
+  email: String!
+
+  """ユーザーの状態"""
+  status: UserStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  profile: Profile
+  userOnChannels: [UserOnChannel!]
+  message: [Message!]
+  _count: UserCount!
+}
+
+type UserCount {
+  userOnChannels: Int!
+  message: Int!
+}
+
+type UserOnChannel {
+  userId: Int!
+  channelId: Int!
+  joinedAt: DateTime!
+  joinedBy: String!
+  user: User!
+  channel: Channel!
+}
+
+type UserOutput {
+  id: ID!
+
+  """LINE ID"""
+  lineId: String
+
+  """Facebook ID"""
+  fbId: String
+
+  """メールアドレス"""
+  email: String!
+
+  """ユーザーの状態"""
+  status: UserStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  profile: Profile
+  userOnChannels: [UserOnChannel!]
+  message: [Message!]
+  _count: UserCount!
+
+  """年齢"""
+  age: Int!
+}
+
+"""ユーザーの状態"""
+enum UserStatus {
+  UNAUTHENTICATED
+  LOGGED_IN_BY_EXTERNAL
+  AVAILABLE
+  VERIFIED
+  FROZEN
+}
+
