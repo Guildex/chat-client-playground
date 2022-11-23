@@ -18,4 +18,24 @@ query GetChannel($uuid: String!) {
   }
 }
 
-mutation Post
+mutation SendMessage($channelUuid: String!, $body: String!) {
+  sendMessage(channelUuid: $channelUuid, body: $body) {
+    id
+  }
+}
+
+subscription MessageSent {
+  messageSent {
+    id
+    senderId
+    createdAt
+    sender {
+      profile {
+        nickname
+      }
+    }
+    content {
+      body
+    }
+  }
+}

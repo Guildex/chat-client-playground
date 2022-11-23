@@ -1,13 +1,11 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { useMemo } from "react";
+import { link } from "./link";
 
 export const useApolloClient = () => {
   const client = new ApolloClient({
-    uri: `${process.env.NEXT_PUBLIC_API_HOST}/graphql`,
+    link,
     cache: new InMemoryCache(),
-    headers: {
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
-    },
   });
 
   return useMemo(() => client, []);
