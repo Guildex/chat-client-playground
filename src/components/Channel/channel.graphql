@@ -1,13 +1,28 @@
+query GetViewer {
+  viewer {
+    id
+    profile {
+      nickname
+      avatarUrls {
+        url
+      }
+    }
+  }
+}
+
 query GetChannel($uuid: String!) {
   channel(uuid: $uuid) {
     id
     uuid
     messages {
       id
-      senderId
       createdAt
       sender {
+        id
         profile {
+          avatarUrls {
+            url
+          }
           nickname
         }
       }
@@ -27,10 +42,13 @@ mutation SendMessage($channelUuid: String!, $body: String!) {
 subscription MessageSent {
   messageSent {
     id
-    senderId
     createdAt
     sender {
+      id
       profile {
+        avatarUrls {
+          url
+        }
         nickname
       }
     }

@@ -5,14 +5,14 @@ import { createClient } from "graphql-ws";
 import { setContext } from "@apollo/client/link/context";
 
 const httpLink = new HttpLink({
-  uri: `http://${process.env.NEXT_PUBLIC_API_HOST}/graphql`,
+  uri: `https://${process.env.NEXT_PUBLIC_API_HOST}/graphql`,
 });
 
 const wsLink =
   typeof window !== "undefined"
     ? new GraphQLWsLink(
         createClient({
-          url: `ws://${process.env.NEXT_PUBLIC_API_HOST}/subscriptions`,
+          url: `wss://${process.env.NEXT_PUBLIC_API_HOST}/subscriptions`,
           connectionParams: {
             authToken: process.env.NEXT_PUBLIC_ACCESS_TOKEN,
           },

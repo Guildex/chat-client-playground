@@ -14,3 +14,9 @@ query GetChannels {
     }
   }
 }
+
+mutation CreateChannel($name: String!) {
+  createChannel(name: $name) {
+    id
+  }
+}

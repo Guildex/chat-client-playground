@@ -1,5 +1,6 @@
 import { ApolloProvider } from "@apollo/client";
 import type { AppProps } from "next/app";
+import { SSRProvider } from "react-aria";
 import { useApolloClient } from "~/lib/apollo/client";
 import "~/styles/globals.css";
 
@@ -8,7 +9,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ApolloProvider client={client}>
-      <Component {...pageProps} />
+      <SSRProvider>
+        <Component {...pageProps} />
+      </SSRProvider>
     </ApolloProvider>
   );
 }

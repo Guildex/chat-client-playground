@@ -3,6 +3,7 @@ import {
   MessageList,
   Message,
   MessageInput,
+  Avatar,
 } from "@chatscope/chat-ui-kit-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.css";
 import { useRouter } from "next/router";
@@ -12,6 +13,7 @@ import {
   MessageSentSubscription,
   useSendMessageMutation,
   useGetChannelQuery,
+  useGetViewerQuery,
 } from "~/@generated/graphql";
 
 export const Channel = () => {
@@ -19,6 +21,7 @@ export const Channel = () => {
   const router = useRouter();
   const channelUuid = router.query.channel as string;
   const [sendMessage] = useSendMessageMutation();
+  const { data: viewerData } = useGetViewerQuery();
   const { data: channelData, subscribeToMore } = useGetChannelQuery({
     variables: {
       uuid: channelUuid,
@@ -50,18 +53,33 @@ export const Channel = () => {
   return (
     <ChatContainer>
       <MessageList>
-        {channelData?.channel?.messages?.map((message) => (
-          <Message
-            key={message.id}
-            model={{
-              message: message.content.body,
-              sentTime: message.createdAt,
-              sender: message.sender?.profile?.nickname,
-              direction: "outgoing",
-              position: "single",
-            }}
-          />
-        ))}
+        {channelData?.channel?.messages?.map((message) => {
+          const isSentByMe = message.sender?.id === viewerData?.viewer.id;
+
+          return (
+            <Message
+              key={message.id}
+              avatarSpacer={!isSentByMe}
+              model={{
+                message: message.content.body,
+                sentTime: message.createdAt,
+                sender: message.sender?.profile?.nickname,
+                direction: isSentByMe ? "outgoing" : "incoming",
+                position: "single",
+              }}
+            >
+              {!isSentByMe && (
+                <Avatar
+                  src={
+                    isSentByMe
+                      ? viewerData?.viewer.profile?.avatarUrls?.at(0)?.url || ""
+                      : ""
+                  }
+                />
+              )}
+            </Message>
+          );
+        })}
       </MessageList>
       <MessageInput
         placeholder="メッセージを入力"

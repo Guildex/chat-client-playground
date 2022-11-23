@@ -4,19 +4,60 @@ import {
   MainContainer,
   Sidebar,
 } from "@chatscope/chat-ui-kit-react";
-import { useGetChannelsQuery } from "~/@generated/graphql";
+import {
+  useCreateChannelMutation,
+  useGetChannelsQuery,
+} from "~/@generated/graphql";
+import { TiPlus } from "react-icons/ti";
 import { Channel } from "~/components/Channel";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
+import { Container, Grid, Input, Loading } from "@nextui-org/react";
+import { useState } from "react";
+import * as Styled from "./style";
 
 export const Channels = () => {
   const router = useRouter();
-  const { data } = useGetChannelsQuery();
+  const { data, refetch } = useGetChannelsQuery();
+  const [createChannel, { loading }] = useCreateChannelMutation();
+  const [channelName, setChannelName] = useState("");
 
   return (
     <div style={{ position: "relative", height: "100vh" }}>
-      <MainContainer>
+      <MainContainer responsive>
         <Sidebar position="left">
+          <Container css={{ p: "8px 12px" }}>
+            <Input
+              aria-label="channelName"
+              width="100%"
+              placeholder="渋谷で飲もう！"
+              disabled={loading}
+              onInput={(e) => {
+                setChannelName(e.currentTarget.value);
+              }}
+              contentRight={
+                loading ? (
+                  <Loading />
+                ) : (
+                  <Styled.SendButton
+                    disabled={loading}
+                    onClick={async () => {
+                      console.log("aa");
+                      await createChannel({
+                        variables: {
+                          name: channelName,
+                        },
+                      });
+                      refetch();
+                    }}
+                  >
+                    <TiPlus color="#fff" size="20px" />
+                  </Styled.SendButton>
+                )
+              }
+            />
+          </Container>
+
           {data?.channels.map(({ uuid, name }) => (
             <NextLink
               href={{
