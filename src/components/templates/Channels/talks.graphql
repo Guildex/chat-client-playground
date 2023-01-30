@@ -1,0 +1,12 @@
+query GetTalks {
+  talks {
+    uuid
+    users {
+      user {
+        profile {
+          mainAvatar
+        }
+      }
+    }
+  }
+}

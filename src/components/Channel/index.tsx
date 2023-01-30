@@ -12,49 +12,57 @@ import {
   MessageSentDocument,
   MessageSentSubscription,
   useSendMessageMutation,
-  useGetChannelQuery,
   useGetViewerQuery,
+  useGetTalkQuery,
 } from "~/@generated/graphql";
 
 export const Channel = () => {
   const [body, setBody] = useState("");
   const router = useRouter();
-  const channelUuid = router.query.channel as string;
+  const talkUuid = router.query.talk as string;
   const [sendMessage] = useSendMessageMutation();
   const { data: viewerData } = useGetViewerQuery();
-  const { data: channelData, subscribeToMore } = useGetChannelQuery({
+  const { data: talkData, subscribeToMore } = useGetTalkQuery({
     variables: {
-      uuid: channelUuid,
+      talkUuid,
     },
   });
 
+  console.log({ talkUuid });
+
   useEffect(() => {
+    if (!talkUuid) return;
+
     const unsubscribe = subscribeToMore<MessageSentSubscription>({
       document: MessageSentDocument,
+      variables: {
+        talkUuid,
+      },
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
-        if (!prev.channel) return prev;
+        if (!prev.talk) return prev;
 
         const newComment = subscriptionData.data.messageSent;
 
         return {
           ...prev,
-          channel: {
-            ...prev.channel,
-            messages: [...(prev.channel?.messages || []), newComment],
+          talk: {
+            ...prev.talk,
+            messages: [...(prev.talk?.messages || []), newComment],
           },
         };
       },
     });
 
     return () => unsubscribe();
-  }, [subscribeToMore]);
+  }, [subscribeToMore, talkUuid]);
 
   return (
     <ChatContainer>
       <MessageList>
-        {channelData?.channel?.messages?.map((message) => {
-          const isSentByMe = message.sender?.id === viewerData?.viewer.id;
+        {talkData?.talk?.messages?.map((message) => {
+          const isSentByMe =
+            message.senderId === parseInt(viewerData?.viewer.id || "", 10);
 
           return (
             <Message
@@ -72,7 +80,7 @@ export const Channel = () => {
                 <Avatar
                   src={
                     isSentByMe
-                      ? viewerData?.viewer.profile?.avatarUrls?.at(0)?.url || ""
+                      ? viewerData?.viewer.profile?.mainAvatar || ""
                       : ""
                   }
                 />
@@ -87,8 +95,10 @@ export const Channel = () => {
         onSend={() => {
           sendMessage({
             variables: {
-              channelUuid,
-              body,
+              input: {
+                talkUuid,
+                body,
+              },
             },
           });
         }}

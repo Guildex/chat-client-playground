@@ -17,37 +17,29 @@ enum AnnualIncome {
 }
 
 type AuthenticateOutput {
-  accessToken: String!
-  user: User!
+  accessToken: String
+  refreshToken: String
+  user: User
 }
 
-type AvatarUrl {
-  id: ID!
-
-  """Profile.id"""
-  profileId: Int!
-
-  """プロフィール画像のURL"""
-  url: String!
-  profile: Profile
+enum AuthProvider {
+  PHONE
+  GOOGLE
+  LINE
+  APPLE
 }
 
-type Channel {
-  id: ID!
-
-  """チャンネルを識別するユニークID"""
-  uuid: String!
-
-  """チャンネル名"""
-  name: String!
-  messages: [Message!]
-  users: [UserOnChannel!]
-  _count: ChannelCount!
+"""血液型"""
+enum BloodType {
+  A
+  B
+  AB
+  O
 }
 
-type ChannelCount {
-  messages: Int!
-  users: Int!
+type CancelMembershipOutput {
+  """退会に成功したか"""
+  isSucceeded: Boolean!
 }
 
 input ConnectionArguments {
@@ -71,7 +63,7 @@ enum Drinking {
 
 type Edge {
   cursor: String!
-  node: ProfileDetail!
+  node: SearchProfilesOutput!
 }
 
 """学歴"""
@@ -83,12 +75,58 @@ enum Education {
   OTHER
 }
 
+"""Firebase Cloud Messaging のトークンを保持"""
+type FcmToken {
+  id: ID!
+
+  """User.id"""
+  userId: Int!
+
+  """トークン"""
+  value: String!
+  user: User!
+}
+
 """体型"""
 enum Figure {
   SLIM
   MUSCULAR
   PLUMP
   FAT
+}
+
+"""性別"""
+enum Gender {
+  MALE
+  FEMALE
+}
+
+"""いいね"""
+type Like {
+  id: ID!
+
+  """いいねした時間"""
+  createdAt: DateTime!
+  userLikeOffer: UserLikeOffer
+}
+
+input LoginInput {
+  """認証プロバイダー"""
+  authProvider: AuthProvider!
+
+  """認証プロバイダーに紐づくID"""
+  authProviderId: String
+
+  """ユーザー名"""
+  nickname: String!
+
+  """メールアドレス"""
+  email: String!
+}
+
+type LogoutOutput {
+  """ログアウトに成功したか"""
+  isSucceeded: Boolean!
 }
 
 """結婚状況"""
@@ -100,11 +138,11 @@ enum MaritalStatus {
 
 type Message {
   id: ID!
-  channelId: Int!
+  talkId: Int!
   senderId: Int!
   messageContentId: Int!
   createdAt: DateTime!
-  channel: Channel
+  talk: Talk
   sender: User
   content: MessageContent!
 }
@@ -118,24 +156,35 @@ type MessageContent {
 }
 
 type Mutation {
-  """チャンネルを作成"""
-  createChannel(
-    """チャンネル名"""
-    name: String!
-  ): Channel!
-  sendMessage(
-    """Channel.uuid"""
-    channelUuid: String!
+  """ログイン"""
+  login(input: LoginInput!): AuthenticateOutput!
 
-    """メッセージ本文"""
-    body: String!
-  ): Message!
+  """ログアウト"""
+  logout: LogoutOutput!
 
-  """ユーザー登録"""
-  registerUser(input: UpdateUserInput!): AuthenticateOutput!
+  """アクセストークンが切れた際に実行して、最新のトークンを取得する処理"""
+  refreshToken: AuthenticateOutput!
+
+  """退会する処理"""
+  cancelMembership: CancelMembershipOutput!
+
+  """ユーザーの本登録時に実行する処理"""
+  registerProfile(input: RegisterProfileInput!): RegisterProfileOutput!
+
+  """メッセージを送信"""
+  sendMessage(input: SendMessageInput!): Message!
+
+  """Firebase Cloud Messagingのトークンを保存"""
+  saveFcmToken(input: SaveFcmTokenInput!): FcmToken!
+
+  """いいねを送る処理"""
+  sendLike(input: SendLikeInput!): SendLikeOutput!
 
   """ユーザ情報を更新"""
-  updateUser(input: UpdateUserInput!): User!
+  updateUser(
+    """アップデート対象の情報"""
+    input: UpdateUserInput!
+  ): User!
 }
 
 """職業"""
@@ -167,8 +216,17 @@ type Profile {
   """ニックネーム"""
   nickname: String!
 
-  """年齢"""
+  """誕生日"""
   birthday: DateTime!
+
+  """メインのプロフィール画像"""
+  mainAvatar: String
+
+  """性別"""
+  gender: Gender!
+
+  """血液型"""
+  bloodType: BloodType!
 
   """都道府県のコード"""
   prefectureCode: Int!
@@ -176,19 +234,16 @@ type Profile {
   """市区町村のコード"""
   cityCode: Int
 
-  """最後にログインした時間"""
-  lastLoggedInAt: DateTime
-
   """自己紹介"""
   selfIntroduction: String
   user: User!
-  avatarUrls: [AvatarUrl!]
+  subAvatar: [SubAvatar!]
   detail: ProfileDetail
   _count: ProfileCount!
 }
 
 type ProfileCount {
-  avatarUrls: Int!
+  subAvatar: Int!
 }
 
 """検索条件で利用するプロフィールの詳細情報"""
@@ -224,8 +279,9 @@ type ProfileDetail {
   profile: Profile
 }
 
+"""プロフィール検索の結果"""
 type ProfileDetailsConnection {
-  nodes: [ProfileDetail!]!
+  nodes: [SearchProfilesOutput!]!
   edges: [Edge!]!
   pageInfo: PageInfo!
   totalCount: Int!
@@ -242,16 +298,83 @@ input ProfileDetailsFilterArgs {
   education: Education
 }
 
+"""プロフィールクエリの返り値"""
+type ProfileOutput {
+  """ユーザーID"""
+  userId: Int!
+
+  """ニックネーム"""
+  nickname: String!
+
+  """年齢"""
+  age: Int!
+
+  """メインプロフィール画像"""
+  mainAvatar: String
+
+  """サブプロフィール画像の一覧"""
+  subAvatar: [SubAvatar!]!
+
+  """このユーザーからいいねをもらえているかどうか"""
+  hasReceivedLike: Boolean!
+
+  """このユーザーに対していいねを送っているかどうか"""
+  isSentLike: Boolean!
+
+  """都道府県のコード"""
+  prefectureCode: Int
+
+  """市区町村のコード"""
+  cityCode: Int
+
+  """自己紹介"""
+  selfIntroduction: String
+
+  """身長"""
+  height: Int
+
+  """職業"""
+  occupation: Occupation
+
+  """体型"""
+  figure: Figure
+
+  """飲酒"""
+  drinking: Drinking
+
+  """喫煙"""
+  smoking: Smoking
+
+  """学歴"""
+  education: Education
+}
+
 type Query {
   """ログイン中のユーザーを取得"""
   viewer: User!
-  channel(
-    """Channel.uuid"""
-    uuid: String!
-  ): Channel
 
-  """ログイン中のユーザーのチャンネル一覧を取得"""
-  channels: [Channel!]!
+  """トークを取得"""
+  talk(
+    """トークのuuid"""
+    uuid: String!
+  ): Talk
+
+  """トーク一覧を取得"""
+  talks: [Talk!]!
+
+  """いいねを送った人の一覧を取得"""
+  sentLikes: SentLikesOutput!
+
+  """受け取ったいいね一覧を取得"""
+  receivedLikes: ReceivedLikesOutput!
+
+  """プロフィール情報を取得"""
+  profile(
+    """Profile.id"""
+    id: Int!
+  ): ProfileOutput!
+
+  """ユーザーの検索"""
   searchProfiles(
     """Paginationに必要なパラメーター"""
     connectionArgs: ConnectionArguments!
@@ -259,14 +382,114 @@ type Query {
     """検索条件となる値"""
     filterArgs: ProfileDetailsFilterArgs
   ): ProfileDetailsConnection!
-
-  """ユーザー情報を取得"""
-  user(id: Int): UserOutput
 }
 
 input RangeFilter {
   min: Int
   max: Int
+}
+
+"""いいねを受け取った人の情報"""
+type ReceivedLikes {
+  """プロフィールのID（プロフィール情報を取得する際に利用）"""
+  profileId: Int!
+
+  """ユーザーID（マッチをする際に利用）"""
+  userId: Int!
+
+  """メインプロフィールの画像"""
+  mainAvatar: String
+
+  """ニックネーム"""
+  nickname: String!
+
+  """年齢"""
+  age: Int!
+}
+
+type ReceivedLikesOutput {
+  likes: [ReceivedLikes!]!
+}
+
+"""アカウント登録時に渡す値"""
+input RegisterProfileInput {
+  """ニックネーム"""
+  nickname: String!
+
+  """性別"""
+  gender: Gender!
+
+  """誕生日"""
+  birthday: DateTime!
+
+  """都道府県コード"""
+  prefectureCode: Int
+}
+
+type RegisterProfileOutput {
+  isSucceeded: Boolean!
+}
+
+input SaveFcmTokenInput {
+  """Firebase Cloud Messagingのトークン"""
+  value: String!
+}
+
+type SearchProfilesOutput {
+  """プロフィールID"""
+  profileId: Int!
+
+  """ニックネーム"""
+  nickname: String!
+
+  """年齢"""
+  age: Int!
+
+  """メインプロフィール画像"""
+  mainAvatar: String
+}
+
+input SendLikeInput {
+  """受け取り先となるユーザーID"""
+  receiverId: Int!
+}
+
+type SendLikeOutput {
+  """成功したかどうか"""
+  isSucceeded: Boolean!
+}
+
+input SendMessageInput {
+  """チャンネルのuuid"""
+  talkUuid: String!
+
+  """メッセージ本文"""
+  body: String!
+}
+
+"""いいねを送った人の情報"""
+type SentLikes {
+  """プロフィールのID"""
+  profileId: Int!
+
+  """メインプロフィールの画像"""
+  mainAvatar: String
+
+  """ニックネーム"""
+  nickname: String!
+
+  """年齢"""
+  age: Int!
+}
+
+"""いいねを送った人の一覧"""
+type SentLikesOutput {
+  likes: [SentLikes!]!
+}
+
+enum ServicePlan {
+  FREE
+  VIP
 }
 
 """喫煙"""
@@ -279,113 +502,107 @@ enum Smoking {
   STOP
 }
 
+"""サブのプロフィール画像"""
+type SubAvatar {
+  id: ID!
+
+  """Profile.id"""
+  profileId: Int!
+
+  """プロフィール画像のURL"""
+  url: String!
+  profile: Profile
+}
+
 type Subscription {
-  messageSent: Message!
+  """メッセージ送信を監視"""
+  messageSent(
+    """Talkのuuid"""
+    talkUuid: String!
+  ): Message!
+}
+
+type Talk {
+  """トークを識別するユニークID"""
+  uuid: String!
+  messages: [Message!]
+  users: [UserTalkJoin!]
+  _count: TalkCount!
+}
+
+type TalkCount {
+  messages: Int!
+  users: Int!
 }
 
 """ユーザー情報更新時に渡す値"""
 input UpdateUserInput {
-  """メールアドレス"""
-  email: String
-
-  """ユーザーの状態"""
-  status: String
-
   """ニックネーム"""
   nickname: String
 
-  """都道府県コード"""
-  prefectureCode: Int
-
-  """市区町村コード"""
-  cityCode: Int
+  """メールアドレス"""
+  email: String
 
   """身長"""
   height: Int
 
   """年収"""
-  annualIncome: String
+  annualIncome: AnnualIncome
 
   """職業"""
-  occupation: String
+  occupation: Occupation
 
   """体型"""
-  figure: String
+  figure: Figure
 
   """飲酒"""
-  drinking: String
+  drinking: Drinking
 
   """喫煙"""
-  smoking: String
+  smoking: Smoking
 
   """結婚状況"""
-  maritalStatus: String
+  maritalStatus: MaritalStatus
 
   """学歴"""
-  education: String
+  education: Education
 }
 
 type User {
   id: ID!
 
-  """LINE ID"""
-  lineId: String
-
-  """Facebook ID"""
-  fbId: String
-
   """メールアドレス"""
   email: String!
 
+  """サービスプラン"""
+  servicePlan: ServicePlan!
+
   """ユーザーの状態"""
   status: UserStatus!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  deletedAt: DateTime
   profile: Profile
-  userOnChannels: [UserOnChannel!]
-  message: [Message!]
   _count: UserCount!
 }
 
 type UserCount {
-  userOnChannels: Int!
+  userTalkJoins: Int!
   message: Int!
+  sentLikes: Int!
+  receivedLikes: Int!
 }
 
-type UserOnChannel {
-  userId: Int!
-  channelId: Int!
-  joinedAt: DateTime!
-  joinedBy: String!
-  user: User!
-  channel: Channel!
-}
+"""ユーザーといいねの中間テーブル"""
+type UserLikeOffer {
+  """いいねを送った人のユーザーID"""
+  senderId: Int!
 
-type UserOutput {
-  id: ID!
+  """いいねを受け取った人のユーザーID"""
+  receiverId: Int!
 
-  """LINE ID"""
-  lineId: String
-
-  """Facebook ID"""
-  fbId: String
-
-  """メールアドレス"""
-  email: String!
-
-  """ユーザーの状態"""
-  status: UserStatus!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  deletedAt: DateTime
-  profile: Profile
-  userOnChannels: [UserOnChannel!]
-  message: [Message!]
-  _count: UserCount!
-
-  """年齢"""
-  age: Int!
+  """いいねのID"""
+  likeId: Int!
+  sender: User!
+  receiver: User!
+  like: Like!
 }
 
 """ユーザーの状態"""
@@ -395,5 +612,13 @@ enum UserStatus {
   AVAILABLE
   VERIFIED
   FROZEN
+}
+
+type UserTalkJoin {
+  userId: Int!
+  talkId: Int!
+  joinedAt: DateTime!
+  user: User!
+  talk: Talk!
 }
 

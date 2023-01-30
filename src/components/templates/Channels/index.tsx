@@ -4,10 +4,7 @@ import {
   MainContainer,
   Sidebar,
 } from "@chatscope/chat-ui-kit-react";
-import {
-  useCreateChannelMutation,
-  useGetChannelsQuery,
-} from "~/@generated/graphql";
+import { useGetTalksQuery } from "~/@generated/graphql";
 import { TiPlus } from "react-icons/ti";
 import { Channel } from "~/components/Channel";
 import NextLink from "next/link";
@@ -18,8 +15,7 @@ import * as Styled from "./style";
 
 export const Channels = () => {
   const router = useRouter();
-  const { data, refetch } = useGetChannelsQuery();
-  const [createChannel, { loading }] = useCreateChannelMutation();
+  const { data, refetch } = useGetTalksQuery();
   const [channelName, setChannelName] = useState("");
 
   return (
@@ -33,51 +29,45 @@ export const Channels = () => {
               aria-label="channelName"
               width="80%"
               placeholder="渋谷で飲もう！"
-              disabled={loading}
               onInput={(e) => {
                 setChannelName(e.currentTarget.value);
               }}
             />
             <Styled.SendButtonBox>
               <Styled.SendButton
-                disabled={loading}
                 onClick={async () => {
                   if (!channelName) return;
 
-                  await createChannel({
-                    variables: {
-                      name: channelName,
-                    },
-                  });
+                  // await createChannel({
+                  //   variables: {
+                  //     name: channelName,
+                  //   },
+                  // });
                   refetch();
                 }}
               >
-                {loading ? (
-                  <Loading size="xs" />
-                ) : (
-                  <TiPlus color="#fff" size="20px" />
-                )}
+                <TiPlus color="#fff" size="20px" />
               </Styled.SendButton>
             </Styled.SendButtonBox>
           </Container>
 
-          {data?.channels.map(({ uuid, name }) => (
+          {data?.talks.map(({ uuid }) => (
             <NextLink
               href={{
                 query: {
-                  channel: uuid,
+                  talk: uuid,
                 },
               }}
               key={uuid}
             >
               <ConversationHeader>
                 <Avatar src="https://shibuyaplusfun.com/uploads/images/resized/2100x1534/shibuyaplusfun/000002/000002/dc2f44d5.png" />
-                <ConversationHeader.Content>{name}</ConversationHeader.Content>
+                <ConversationHeader.Content>{uuid}</ConversationHeader.Content>
               </ConversationHeader>
             </NextLink>
           ))}
         </Sidebar>
-        {router.query.channel && <Channel />}
+        {router.query.talk && <Channel />}
       </MainContainer>
     </div>
   );

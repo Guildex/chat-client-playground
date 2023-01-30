@@ -1,0 +1,70 @@
+query GetViewer {
+  viewer {
+    id
+    profile {
+      nickname
+      mainAvatar
+    }
+  }
+}
+
+query GetTalk($talkUuid: String!) {
+  talk(uuid: $talkUuid) {
+    uuid
+    messages {
+      id
+      senderId
+      sender {
+        profile {
+          nickname
+        }
+      }
+      createdAt
+      content {
+        body
+      }
+    }
+  }
+}
+
+mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    id
+    talkId
+    senderId
+    messageContentId
+    createdAt
+    talk {
+      uuid
+    }
+    sender {
+      id
+      email
+      servicePlan
+      status
+    }
+  }
+}
+
+subscription MessageSent($talkUuid: String!) {
+  messageSent(talkUuid: $talkUuid) {
+    id
+    talkId
+    senderId
+    messageContentId
+    createdAt
+    talk {
+      uuid
+    }
+    sender {
+      id
+      email
+      servicePlan
+      status
+    }
+    content {
+      id
+      body
+    }
+  }
+}

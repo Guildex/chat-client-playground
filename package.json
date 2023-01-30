@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gql:get-schema": "get-graphql-schema http://dev-api.frappy.app/graphql > src/@generated/schema.graphql",
+    "gql:get-schema:dev": "get-graphql-schema https://dev-api.frappy.app/graphql > src/@generated/schema.graphql",
+    "gql:get-schema:local": "get-graphql-schema http://localhost:4000/graphql > src/@generated/schema.graphql",
     "gql:codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
